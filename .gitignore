@@ -1,0 +1,7 @@
+# Device identities and generated private configs must never be public.
+/providers/
+/private/
+*.conf
+*-local-wireguard.yaml
+*-community.yaml
+__pycache__/
