@@ -1,0 +1,119 @@
+# Public Mihomo template. Device keys stay in the local node provider.
+# First install providers/local-wireguard.yaml in the core HomeDir.
+# Import/update this main profile through an already-working proxy.
+mixed-port: 7890
+allow-lan: false
+mode: rule
+log-level: info
+ipv6: false
+unified-delay: true
+tcp-concurrent: true
+tun:
+  enable: false
+  stack: system
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: false
+  dns-mode: native
+  dns-hijack:
+  - any:53
+  - tcp://any:53
+  mtu: 1400
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  use-hosts: true
+  default-nameserver:
+  - 223.5.5.5
+  - 119.29.29.29
+  proxy-server-nameserver:
+  - 223.5.5.5
+  direct-nameserver:
+  - 223.5.5.5
+  - 119.29.29.29
+  nameserver:
+  - 223.5.5.5
+  - 119.29.29.29
+  nameserver-policy:
+    geosite:cn:
+    - 223.5.5.5
+    - 119.29.29.29
+    +.openai.com: https://1.1.1.1/dns-query#PROXY
+    +.chatgpt.com: https://1.1.1.1/dns-query#PROXY
+    +.claude.ai: https://1.1.1.1/dns-query#PROXY
+    +.anthropic.com: https://1.1.1.1/dns-query#PROXY
+    +.github.com: https://1.1.1.1/dns-query#PROXY
+    +.githubusercontent.com: https://1.1.1.1/dns-query#PROXY
+    +.google.com: https://1.1.1.1/dns-query#PROXY
+    +.googleapis.com: https://1.1.1.1/dns-query#PROXY
+    +.youtube.com: https://1.1.1.1/dns-query#PROXY
+  fallback:
+  - https://1.1.1.1/dns-query#PROXY
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    fallback-lazy-query: true
+    domain:
+    - +.openai.com
+    - +.chatgpt.com
+    - +.claude.ai
+    - +.anthropic.com
+    - +.github.com
+    - +.google.com
+    - +.youtube.com
+  fake-ip-filter:
+  - '*.lan'
+  - '*.local'
+  - '*.home.arpa'
+  - localhost
+  - time.windows.com
+proxies: []
+proxy-groups:
+- name: PROXY
+  type: select
+  use:
+  - local-wireguard
+rules:
+- DOMAIN-SUFFIX,openai.com,PROXY
+- DOMAIN-SUFFIX,chatgpt.com,PROXY
+- DOMAIN-SUFFIX,claude.ai,PROXY
+- DOMAIN-SUFFIX,anthropic.com,PROXY
+- DOMAIN-SUFFIX,github.com,PROXY
+- DOMAIN-SUFFIX,githubusercontent.com,PROXY
+- DOMAIN-SUFFIX,githubassets.com,PROXY
+- DOMAIN-SUFFIX,google.com,PROXY
+- DOMAIN-SUFFIX,googleapis.com,PROXY
+- DOMAIN-SUFFIX,gstatic.com,PROXY
+- DOMAIN-SUFFIX,youtube.com,PROXY
+- DOMAIN-SUFFIX,lan,DIRECT
+- DOMAIN-SUFFIX,local,DIRECT
+- DOMAIN-SUFFIX,home.arpa,DIRECT
+- GEOIP,LAN,DIRECT,no-resolve
+- RULE-SET,community-cn-domain,DIRECT
+- RULE-SET,community-cn-ip,DIRECT
+- MATCH,PROXY
+rule-providers:
+  community-cn-domain:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs
+    path: ./rules/community-cn-domain.mrs
+    interval: 86400
+    proxy: PROXY
+  community-cn-ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs
+    path: ./rules/community-cn-ip.mrs
+    interval: 86400
+    proxy: PROXY
+proxy-providers:
+  local-wireguard:
+    type: file
+    path: ./providers/local-wireguard.yaml
+    health-check:
+      enable: false
